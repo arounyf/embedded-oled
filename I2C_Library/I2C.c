@@ -1,6 +1,6 @@
 /*
  * I2C.c - Software I2C using libgpiod + busy-wait delay
- * SDA=pin24(gpiochip0:24), SCL=pin25(gpiochip0:25)
+ * OneCloud: SDA=pin446, SCL=pin440
  * usleep() has 3.3ms granularity (HZ=300), so we use busy-wait.
  */
 
@@ -21,8 +21,8 @@ static void busy_udelay(int us)
     while (n--) __asm__ __volatile__("nop");
 }
 
-#define SDA_PIN   24
-#define SCL_PIN   25
+#define SDA_PIN   446
+#define SCL_PIN   440
 #define CHIP_NAME "gpiochip0"
 #define I2C_HD    1    /* half-bit busy-wait in us (~333kHz I2C clock) */
 
