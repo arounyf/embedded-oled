@@ -54,7 +54,7 @@
 					"cycle":5,"time":20,"page":2
 			},
 			"display":[
-					{"type":"str","data":"Wlan0","x0":30,"y0":5,"size":2,"color":1,"en":1},
+					{"type":"str","data":"WIFI","x0":30,"y0":5,"size":2,"color":1,"en":1},
 					{"type":"base","func":5,"x0":0,"y0":28,"port":"wlan0","base":15,"size":2,"color":1,"en":1}
 			]
 	},
@@ -64,7 +64,7 @@
 					"cycle":5,"time":20,"page":1
 			},
 			"display":[
-					{"type":"str","data":"End1","x0":38,"y0":5,"size":2,"color":1,"en":1},
+					{"type":"str","data":"ETH0","x0":38,"y0":5,"size":2,"color":1,"en":1},
 					{"type":"base","func":5,"x0":0,"y0":28,"port":"end1","base":15,"size":2,"color":1,"en":1}
 
 			]
