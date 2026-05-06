@@ -36,6 +36,8 @@ SOFTWARE.
 
 #include "../Main/dataapi.h"
 
+extern char oled_driver_type[16];  /* SSD1306 or SSD1312 */
+
 /* Find Min and Max - MACROS */
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))

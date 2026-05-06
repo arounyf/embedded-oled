@@ -16,6 +16,7 @@
 #define	DefaultI2cAddr	0x3c					//OLED地址
 #define	DefaultI2cDev	"/dev/i2c-0"			//驱动文件地址
 #define DefaultConfig	"/etc/oled/config.json"	//配置文件地址
+#define DefaultOledDrv	"SSD1306"		//默认OLED驱动类型
 #define TempPath		"/sys/class/thermal/thermal_zone0/temp"	//配置文件地址
 #define FreqPath		"cat /sys/devices/system/cpu/cpu[04]/cpufreq/cpuinfo_cur_freq"
 #define Cpuload		    "top -s -n1 | awk '/%Cpu/{printf 100-($8)}'"      //空闲CPU
@@ -76,6 +77,7 @@ typedef struct sysSetData
 	unsigned char oledaddr;	//OLED地址
 	char *i2cdev;			//驱动文件地址
 	char *config;			//配置文件地址
+	char *oleddrv;			//OLED驱动类型: SSD1306/SSD1312
 	int pagenum;			//页面数量
 	int loopnum;			//页面数量
 }setingData;

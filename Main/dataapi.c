@@ -190,6 +190,20 @@ void getOledSting(cJSON *configjson)
 			printf("Set OLED addr error\n");
 			printf("Use default addr:0x3c\n");
 		}
+		// 读取OLED驱动类型
+		temp = cJSON_GetObjectItem(setjson, "driver");
+		if(temp != NULL && temp->type == cJSON_String)
+		{
+			int drv_len = strlen(temp->valuestring);
+			SetingData.oleddrv = (char*)malloc(drv_len + 1);
+			strcpy(SetingData.oleddrv, temp->valuestring);
+			SetingData.oleddrv[drv_len] = '\0';
+		}
+		else
+		{
+			SetingData.oleddrv = DefaultOledDrv;
+		}
+
 		//删除设置节项目
 		cJSON_DeleteItemFromObject(ConfigJson,"seting");
 	}
@@ -546,6 +560,9 @@ void oledInit(void)
         exit(1);
     }
 	
+    /* 设置OLED驱动类型 */
+    strncpy(oled_driver_type, SetingData.oleddrv, sizeof(oled_driver_type) - 1);
+    oled_driver_type[sizeof(oled_driver_type) - 1] = '\0';
     /* 运行SDD1306初始化序列 */
 	//该函数使用了calloc()分配显存空间，请勿多次引用！！！！！！！！！！！
     display_Init_seq();

@@ -39,6 +39,8 @@ SOFTWARE.
 #include "SSD1306_OLED.h"
 #include "gfxfont.h"
 
+char oled_driver_type[16] = "SSD1306";
+
 /* Enable or Disable DEBUG Prints */
 //#define SSD1306_DBG
 
@@ -570,19 +572,24 @@ void display_Init_seq()
         exit(1);
     }
 
-    /* Set display SEG_REMAP */
-    if(i2c_write_register(I2C_DEV_2.fd_i2c, SSD1306_CNTRL_CMD, SSD1306_SEG_REMAP) == I2C_TWO_BYTES)
+    /* Set display SEG_REMAP — driver-specific */
     {
+        unsigned char seg_remap = SSD1306_SEG_REMAP;
+        if (strcmp(oled_driver_type, "SSD1312") == 0)
+            seg_remap = 0xA0;
+        if(i2c_write_register(I2C_DEV_2.fd_i2c, SSD1306_CNTRL_CMD, seg_remap) == I2C_TWO_BYTES)
+        {
 #ifdef SSD1306_DBG
-        printf("Display SEG_REMAP Command Passed\r\n");
+            printf("Display SEG_REMAP (drv=%s) Passed\r\n", oled_driver_type);
 #endif
-    }
-    else
-    {
+        }
+        else
+        {
 #ifdef SSD1306_DBG
-        printf("Display SEG_REMAP Command Failed\r\n");
+            printf("Display SEG_REMAP Command Failed\r\n");
 #endif
-        exit(1);
+            exit(1);
+        }
     }
 
     /* Set display DIR */
