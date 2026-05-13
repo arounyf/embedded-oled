@@ -1,12 +1,12 @@
 {
 	"seting":{
 		"pixel":12864,
-		"dev":"/dev/i2c-3",
+		"dev":"/dev/i2c-6",
 		"addr":60
 	},
 	"draw1":{
 		"seting":{
-			"cycle":3,"time":30,"page":5
+			"cycle":10,"time":30,"page":5
 		},
 		"display":[
 			{"type":"r_rect","x0":2,"y0":2,"w":124,"h":60,"r":30,"fill":0,"color":1,"en":1},
@@ -16,7 +16,7 @@
 	},
 	"Temp":{
 		"seting":{
-			"cycle":3,"time":20,"page":1
+			"cycle":10,"time":20,"page":1
 		},
 		"display":[
 			{"type":"str","data":"CPU Temp","x0":20,"y0":4,"size":2,"color":2,"en":1},
@@ -26,7 +26,7 @@
 	},
 	"TotMem":{
 		"seting":{
-			"cycle":3,"time":20,"page":2
+			"cycle":10,"time":20,"page":2
 		},
 		"display":[
 			{"type":"str","data":"Total Mem","x0":10,"y0":8,"size":2,"color":2,"en":1},
@@ -36,7 +36,7 @@
 	},
 	"UseMem":{
 		"seting":{
-			"cycle":3,"time":20,"page":3
+			"cycle":10,"time":20,"page":3
 		},
 		"display":[
 			{"type":"str","data":"Used Mem","x0":13,"y0":8,"size":2,"color":2,"en":1},
@@ -46,7 +46,7 @@
 	},
 	"IP":{
 		"seting":{
-			"cycle":3,"time":20,"page":4
+			"cycle":10,"time":20,"page":4
 		},
 		"display":[
 			{"type":"str","data":"eth0","x0":38,"y0":5,"size":2,"color":1,"en":1},
@@ -55,7 +55,7 @@
 	},
 	"Uptime":{
 		"seting":{
-			"cycle":3,"time":20,"page":5
+			"cycle":10,"time":20,"page":5
 		},
 		"display":[
 			{"type":"str","data":"Uptime","x0":30,"y0":5,"size":2,"color":1,"en":1},

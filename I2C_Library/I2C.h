@@ -1,5 +1,5 @@
 /*
- * I2C.h — Software bit-banged I2C using libgpiod
+ * I2C.h — Linux kernel I2C character device interface
  */
 
 #ifndef I2C_H_
@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <linux/i2c-dev.h>
 
 /* No. of bytes per transaction */
 #define I2C_ONE_BYTE                     1

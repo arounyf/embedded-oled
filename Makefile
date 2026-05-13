@@ -5,7 +5,7 @@ SOURCES = SSD1306_OLED_Library/SSD1306_OLED.c Main/Main.c Main/dataapi.c I2C_Lib
 OBJS := $(SOURCES:.c=.o)
 CPPFLAGS := -I SSD1306_OLED_Library -I I2C_Library -I cJSON -I Main
 CFLAGS := -g -Wall
-LDFLAGS := -lgpiod
+LDFLAGS :=
 
 ssd: $(OBJS)
 	$(CC) $^ -o $@ $(LDFLAGS)
