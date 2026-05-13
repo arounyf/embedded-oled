@@ -19,7 +19,7 @@
 			"cycle":3,"time":20,"page":1
 		},
 		"display":[
-			{"type":"str","data":"CPU Temp","x0":20,"y0":4,"size":3,"color":2,"en":1},
+			{"type":"str","data":"CPU Temp","x0":20,"y0":4,"size":2,"color":2,"en":1},
 			{"type":"str","data":"'C","x0":90,"y0":36,"size":2,"color":2,"en":1},
 			{"type":"base","func":2,"x0":30,"y0":36,"base":4,"class":0,"size":2,"color":1,"en":1}
 		]
@@ -29,16 +29,24 @@
 			"cycle":3,"time":20,"page":2
 		},
 		"display":[
-			{"type":"str","data":"Memory","x0":28,"y0":4,"size":2,"color":2,"en":1},
-			{"type":"str","data":"Total","x0":5,"y0":28,"size":2,"color":2,"en":1},
-			{"type":"str","data":"Used","x0":60,"y0":28,"size":2,"color":2,"en":1},
-			{"type":"base","func":6,"x0":5,"y0":48,"base":5,"class":1,"size":2,"color":1,"en":1},
-			{"type":"base","func":7,"x0":60,"y0":48,"base":5,"class":1,"size":2,"color":1,"en":1}
+			{"type":"str","data":"Total Mem","x0":10,"y0":8,"size":2,"color":2,"en":1},
+			{"type":"str","data":"G","x0":90,"y0":36,"size":2,"color":2,"en":1},
+			{"type":"base","func":6,"x0":25,"y0":36,"base":5,"class":1,"size":2,"color":1,"en":1}
+		]
+	},
+	"UseMem":{
+		"seting":{
+			"cycle":3,"time":20,"page":3
+		},
+		"display":[
+			{"type":"str","data":"Used Mem","x0":13,"y0":8,"size":2,"color":2,"en":1},
+			{"type":"str","data":"G","x0":90,"y0":36,"size":2,"color":2,"en":1},
+			{"type":"base","func":7,"x0":25,"y0":36,"base":5,"class":1,"size":2,"color":1,"en":1}
 		]
 	},
 	"IP":{
 		"seting":{
-			"cycle":3,"time":20,"page":3
+			"cycle":3,"time":20,"page":4
 		},
 		"display":[
 			{"type":"str","data":"eth0","x0":38,"y0":5,"size":2,"color":1,"en":1},
@@ -47,7 +55,7 @@
 	},
 	"Uptime":{
 		"seting":{
-			"cycle":3,"time":20,"page":4
+			"cycle":3,"time":20,"page":5
 		},
 		"display":[
 			{"type":"str","data":"Uptime","x0":30,"y0":5,"size":2,"color":1,"en":1},
