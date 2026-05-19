@@ -72,8 +72,8 @@ static GFXfontPtr gfxFont;
 /* Externs - I2C.c */
 extern I2C_DeviceT I2C_DEV_2;
 
-/* Chunk Buffer */
-static unsigned char chunk[17] = {0};
+/* Chunk Buffer: control byte + full screen data (128x64=1024) */
+static unsigned char chunk[1025] = {0};
 
 /* Memory buffer for displaying data on LCD - This is an Apple - Fruit */
 //static unsigned char screen[DISPLAY_BUFF_SIZE] ={0};
@@ -796,34 +796,18 @@ void display_Init_seq()
  ****************************************************************/
 void transfer()
 {
-    short loop_1 = 0, loop_2 = 0;
-    short index = 0x00;
-    for (loop_1 = 0; loop_1 < 1024; loop_1++)
+    chunk[0] = 0x40;
+    memcpy(&chunk[1], screen, 1024);
+    if(i2c_multiple_writes(I2C_DEV_2.fd_i2c, 1025, chunk) != 1025)
     {
-        chunk[0] = 0x40;
-        for(loop_2 = 1; loop_2 < 17; loop_2++)
-		{
-            chunk[loop_2] = screen[index++];
-		}
-        if(i2c_multiple_writes(I2C_DEV_2.fd_i2c, 17, chunk) == 17)
-        {
 #ifdef SSD1306_DBG
-            printf("Chunk written to RAM - Completed\r\n");
+        printf("Screen write Failed\r\n");
 #endif
-        }
-        else
-        {
-#ifdef SSD1306_DBG
-            printf("Chunk written to RAM - Failed\r\n");
-#endif
-            exit(1);
-        }
-        memset(chunk,0x00,17);
-        if(index == 1024)
-		{
-            break;
-		}
+        exit(1);
     }
+#ifdef SSD1306_DBG
+    printf("Screen write Completed\r\n");
+#endif
 }
 
 
