@@ -147,10 +147,10 @@ void setTimer(void)
 	
 	// Timeout to run function first time    
 	tick.it_value.tv_sec = 0;  // sec  
-	tick.it_value.tv_usec = 100000; // micro sec.  
+	tick.it_value.tv_usec = 200000; // micro sec.  
 	// Interval time to run function   
 	tick.it_interval.tv_sec = 0;  
-	tick.it_interval.tv_usec = 100000;  
+	tick.it_interval.tv_usec = 200000;  
    
 	if (setitimer(ITIMER_REAL, &tick, NULL)) 
 	{
@@ -256,7 +256,7 @@ void oledRun(char *conf)
 		}
 		pageStart(PageData);
 		pageStop(RunPageData);
-		usleep(100000);
+		usleep(200000);
 	}
 	
 //	//释放空间
