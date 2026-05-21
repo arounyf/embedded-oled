@@ -10,8 +10,8 @@
 		},
 		"display":[
 			{"type":"r_rect","x0":2,"y0":2,"w":124,"h":60,"r":30,"fill":0,"color":1,"en":1},
-			{"type":"str","data":"One-KVM","x0":23,"y0":9,"size":2,"color":1,"en":1},
-			{"type":"str","data":"OEC-Turbo","x0":16,"y0":33,"size":2,"color":1,"en":1}
+			{"type":"str","data":"One-KVM","x0":23,"y0":12,"size":2,"color":1,"en":1},
+			{"type":"str","data":"RUST","x0":40,"y0":35,"size":2,"color":1,"en":1}
 		]
 	},
 	"Temp":{
