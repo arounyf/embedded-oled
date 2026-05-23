@@ -1,39 +1,30 @@
-# SSD1306 OLED 驱动（GPIO Busy-Wait 方案）
+# SSD1306 OLED 驱动（i2c-gpio 方案）
 
-基于 [SSD1306_OLED_json](https://github.com/arounyf/SSD1306_OLED_json)，为 **RK3566/OEC Turbo** 设备适配的软件 I2C 方案。
+为 **RK3566/OEC Turbo** 设备适配的 OLED 驱动，基于内核 `i2c-gpio` 模块实现硬件 I2C。
 
 ## 背景
 
-RK3566 片上 6 路 I2C 控制器默认全部 disabled，且 GPIO0_D0/D1（pin 24/25）不支持 mux 为硬件 I2C 功能。本方案通过 GPIO 软件模拟 I2C 驱动 SSD1306 OLED。
+RK3566 片上 I2C 控制器默认全部 disabled，且 GPIO0_D0/D1（pin 24/25）不支持 mux 为硬件 I2C。通过内核 `i2c-gpio` 驱动将这两个 GPIO 注册为标准 I2C 总线（`/dev/i2c-*`），由内核处理时序，用户态 `write()` 即可驱动 OLED，CPU 占用接近零。
 
 ## 关键问题与解决
 
 | 问题 | 根因 | 解决 |
 |------|------|------|
 | 页面不轮播 | `signal()` 在 ARM64 上只触发一次 | 改用 `sigaction()` |
-| OLED 逐行刷新极慢 | 内核 `CONFIG_HZ=300`，`usleep()` 最少 3.3ms | 改用 busy-wait 延迟 |
-| 每次 GPIO 操作过慢 | libgpiod `set_value` 是 ioctl，开销 50+us | libgpiod 实测 ~0.1us，瓶颈全在 usleep |
-| mmap `/dev/mem` 写不生效 | `CONFIG_STRICT_DEVMEM=y` 阻止用户态写设备寄存器 | 放弃 mmap，用 libgpiod + busy-wait |
-
-## I2C 时序
-
-```
-I2C_HD = 1us  (半位延迟，busy-wait)
-I2C 时钟 ≈ 333kHz  (SSD1306 最大支持 400kHz)
-整帧刷新 ≈ 46ms   (~22fps)
-```
+| 无法使用硬件 I2C | RK3566 I2C 控制器不可用 pin24/25 | DTB 添加 `i2c-gpio` 节点 |
+| 软件 I2C CPU 过高 | busy-wait 消耗大量 CPU | 改用内核 i2c-gpio 驱动 |
 
 ## 文件结构
 
 ```
 ├── README.md
-├── Makefile                         # 编译文件，链接 -lgpiod
+├── Makefile
 ├── config.json                      # OLED 显示内容 JSON 配置
 ├── I2C_Library/
-│   ├── I2C.c                        # 软件 I2C 实现（libgpiod + busy-wait）
+│   ├── I2C.c                        # Linux I2C 接口（open/ioctl/write）
 │   └── I2C.h
 ├── SSD1306_OLED_Library/
-│   ├── SSD1306_OLED.c               # SSD1306 驱动（原版，未改）
+│   ├── SSD1306_OLED.c               # SSD1306 驱动
 │   ├── SSD1306_OLED.h
 │   └── gfxfont.h
 ├── Main/
@@ -52,15 +43,49 @@ I2C 时钟 ≈ 333kHz  (SSD1306 最大支持 400kHz)
 | SDA | gpio0 pin 24 | UART6 RX |
 | SCL | gpio0 pin 25 | UART6 TX |
 
-## 部署步骤
+## DTB 修改
 
-### 1. 安装依赖
+需要两处修改，建议直接修改当前使用的 `.dtb`：
+
+### 1. USB OTG（One-KVM 必需）
+
+将 `usbdrd` 节点的 `dr_mode` 从 `"host"` 改为 `"peripheral"`：
 
 ```bash
-apt-get install libgpiod-dev
+cd /boot/dtb/rockchip/
+# 备份
+cp your-device.dtb your-device.dtb.orig
+# 解包
+dtc -I dtb -O dts your-device.dtb -o tmp.dts
+# 编辑：找到 usbdrd 下的 usb@fcc00000，将 dr_mode = "host" 改为 dr_mode = "peripheral"
+# （注意不要改 usbhost 下的那个）
+# 打包
+dtc -I dts -O dtb tmp.dts -o your-device.dtb
 ```
 
-### 2. 编译
+### 2. i2c-gpio（OLED 所需）
+
+在根节点内添加 `i2c-gpio-0` 节点，将 GPIO24/25 注册为 I2C 总线：
+
+```dts
+i2c-gpio-0 {
+    compatible = "i2c-gpio";
+    sda-gpios = <&gpio0 24 0>;
+    scl-gpios = <&gpio0 25 0>;
+    i2c-gpio,delay-us = <2>;
+    #address-cells = <1>;
+    #size-cells = <0>;
+    status = "okay";
+};
+```
+
+> 确保内核已加载 `i2c-gpio` 模块：`echo i2c-gpio > /etc/modules-load.d/i2c-gpio.conf`
+>
+> 重启后检查：`ls /dev/i2c-*`，更新 `config.json` 中 `"dev"` 为对应设备路径。
+
+## 部署步骤
+
+### 1. 编译
 
 ```bash
 cd /opt/ssd1306_oled
@@ -68,51 +93,39 @@ make clean
 make
 ```
 
-### 3. 运行前释放 GPIO
+> 无需额外依赖，使用内核头文件 `<linux/i2c-dev.h>` 即可。
+
+### 2. 安装服务
 
 ```bash
-echo 24 > /sys/class/gpio/unexport 2>/dev/null
-echo 25 > /sys/class/gpio/unexport 2>/dev/null
+mkdir -p /etc/oled
+cp config.json /etc/oled/config.json
+# 按需修改 /etc/oled/config.json 中的 "dev" 指向正确的 /dev/i2c-*
+
+cat > /etc/systemd/system/ssd-oled.service << 'EOF'
+[Unit]
+Description=SSD1306 OLED Display Driver
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/opt/ssd1306_oled/ssd -c /etc/oled/config.json
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable --now ssd-oled
 ```
 
-### 4. 运行
+### 3. 运行
 
 ```bash
-./ssd                      # 使用默认配置 /etc/oled/config.json
+./ssd                          # 使用默认配置 /etc/oled/config.json
 ./ssd -c /path/to/config.json  # 使用自定义配置
-```
-
-## I2C.c 核心实现
-
-```c
-// GPIO 速度：libgpiod set_value 实测 ~0.1us/次
-// 瓶颈在于 usleep() — CONFIG_HZ=300 导致最小睡眠 3.3ms
-// 解决方案：用 NOP 循环做 busy-wait
-
-#define BUSY_LOOPS_PER_US  2500   // 基于 CPU 频率校准
-#define I2C_HD            1       // 半位延迟 (us)
-#define I2C_FREQ_KHZ      (1000 / (3 * I2C_HD))  // ~333kHz
-
-static void busy_udelay(int us)
-{
-    if (us <= 0) return;
-    volatile unsigned int n = us * BUSY_LOOPS_PER_US;
-    while (n--) __asm__ __volatile__("nop");
-}
-
-static void i2c_write_byte_fast(unsigned char byte)
-{
-    for (int i = 7; i >= 0; i--) {
-        sda_set((byte >> i) & 1);
-        busy_udelay(I2C_HD);
-        scl_set(1); busy_udelay(I2C_HD);
-        scl_set(0); busy_udelay(I2C_HD);
-    }
-    // ACK bit — SSD1306 always ACKs, skip read
-    sda_set(1); busy_udelay(I2C_HD);
-    scl_set(1); busy_udelay(I2C_HD);
-    scl_set(0); busy_udelay(I2C_HD);
-}
 ```
 
 ## 定时器修复 (Main.c)
@@ -128,53 +141,24 @@ sa.sa_handler = timerHandler;
 sigaction(SIGALRM, &sa, NULL);
 ```
 
-## BUSY_LOOPS_PER_US 校准
-
-不同 CPU 频率需调节此值。在目标设备上运行：
-
-```c
-#include <time.h>
-long now_ns() {
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return ts.tv_sec * 1000000000L + ts.tv_nsec;
-}
-
-int main() {
-    volatile unsigned int n;
-    #define TEST_LOOPS 100000
-    long t0 = now_ns();
-    for (volatile int i = 0; i < TEST_LOOPS; i++) {
-        n = BUSY_LOOPS_PER_US;
-        while (n--) __asm__("nop");
-    }
-    long t1 = now_ns();
-    printf("Target: %ld ns/loop, Actual: %.1f ns\n",
-           1000L, (double)(t1 - t0) / TEST_LOOPS);
-    return 0;
-}
-```
-
-调整 `BUSY_LOOPS_PER_US` 使实际值接近 1000ns。
-
 ## 配置文件说明
 
 `config.json` 支持多页面轮播：
 
 ```json
 {
-  "seting": {                           // 全局设置
-    "pixel": 12864,                     // 128x64 分辨率
-    "dev": "/dev/i2c-3",               // 占位（实际用 GPIO）
-    "addr": 60                          // I2C 地址 0x3C
+  "seting": {
+    "pixel": 12864,
+    "dev": "/dev/i2c-6",
+    "addr": 60
   },
-  "PageName": {                         // 每个页面一个 key
+  "PageName": {
     "seting": {
-      "cycle": 3,                       // 刷新次数
-      "time": 20,                       // 显示时间 (×100ms)
-      "page": 1                         // 页面序号（从 1 起连续）
+      "cycle": 3,
+      "time": 20,
+      "page": 1
     },
-    "display": [ ... ]                  // 显示元素列表
+    "display": [ ... ]
   }
 }
 ```
