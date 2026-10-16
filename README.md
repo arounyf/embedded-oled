@@ -13,6 +13,7 @@ RK3566 片上 I2C 控制器默认全部 disabled，且 GPIO0_D0/D1（pin 24/25�
 | 页面不轮播 | `signal()` 在 ARM64 上只触发一次 | 改用 `sigaction()` |
 | 无法使用硬件 I2C | RK3566 I2C 控制器不可用 pin24/25 | DTB 添加 `i2c-gpio` 节点 |
 | 软件 I2C CPU 过高 | busy-wait 消耗大量 CPU | 改用内核 i2c-gpio 驱动 |
+| 关机后屏幕仍亮着 | SSD1306 自发光并保留最后一帧，进程被杀时无人发关闭命令 | 服务加 `ExecStopPost` 发送 Display OFF(`0xAE`)，见「安装服务」 |
 
 ## 文件结构
 
@@ -110,6 +111,7 @@ After=network.target
 [Service]
 Type=simple
 ExecStart=/opt/ssd1306_oled/ssd -c /etc/oled/config.json
+ExecStopPost=/usr/sbin/i2cset -y 6 0x3c 0x00 0xae
 Restart=always
 RestartSec=5
 
@@ -120,6 +122,14 @@ EOF
 systemctl daemon-reload
 systemctl enable --now ssd-oled
 ```
+
+> `ExecStopPost` 用于**关机/重启时熄灭屏幕**。SSD1306 会一直保留最后一帧，
+> `reboot`/`poweroff` 时进程被杀掉但**屏还亮着**（OLED 自发光，不像液晶断电就黑）。
+> 这行在进程退出、i2c 总线释放后向 0x3c 发送 Display OFF(`0xAE`) 熄灭它。
+>
+> 注意必须用 `ExecStopPost` 而不是 `ExecStop`——后者在进程**还活着**时执行，
+> 会被 `ssd` 下一轮刷新覆盖掉。依赖 `i2c-tools`（提供 `/usr/sbin/i2cset`）。
+> 若 i2c 总线号不是 6，把命令里的 `6` 改成实际编号。
 
 ### 3. 运行
 
